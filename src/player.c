@@ -1,9 +1,5 @@
 #include "player.h"
-
-#define GRAVITY 0.5f
-#define JUMP_FORCE -12.0f
-#define PLAYER_SPEED 5.0f
-#define GROUND_Y 550
+#include "config.h"
 
 Player player_create(float x, float y) {
     Player p = {x, y, 0, 0, 0};
@@ -15,8 +11,8 @@ void player_update(Player *p) {
     p->y += p->vy;
     p->vy += GRAVITY;
 
-    if (p->y >= GROUND_Y) {
-        p->y = GROUND_Y;
+    if (p->y >= GROUND_Y - PLAYER_SIZE) {
+        p->y = GROUND_Y - PLAYER_SIZE;
         p->vy = 0;
         p->onGround = 1;
     }

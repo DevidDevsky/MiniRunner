@@ -1,7 +1,5 @@
 #include "render.h"
-
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#include "config.h"
 
 void render(SDL_Renderer *renderer, Player *p) {
     SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
@@ -9,12 +7,12 @@ void render(SDL_Renderer *renderer, Player *p) {
 
     // земля
     SDL_SetRenderDrawColor(renderer, 100, 200, 100, 255);
-    SDL_Rect ground = {0, 600 - 50, SCREEN_WIDTH, 50};
+    SDL_Rect ground = {0, GROUND_Y, SCREEN_WIDTH, GROUND_HEIGHT};
     SDL_RenderFillRect(renderer, &ground);
 
     // игрок
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_Rect rect = {(int)p->x, (int)p->y, 50, 50};
+    SDL_Rect rect = {(int)p->x, (int)p->y, PLAYER_SIZE, PLAYER_SIZE};
     SDL_RenderFillRect(renderer, &rect);
 
     SDL_RenderPresent(renderer);

@@ -4,6 +4,6 @@
 #include <SDL2/SDL.h>
 #include "player.h"
 
-int handle_input(Player *p);
+int handle_input(Player *p, SDL_Window *window);
 
 #endif

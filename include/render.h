@@ -3,7 +3,9 @@
 
 #include <SDL2/SDL.h>
 #include "player.h"
+#include "platform.h"
+#include "level.h"
 
-void render(SDL_Renderer *renderer, Player *p);
+void render(SDL_Renderer *renderer, Player *p, Level *lvl);
 
 #endif

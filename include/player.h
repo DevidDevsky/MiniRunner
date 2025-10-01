@@ -1,6 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include "platform.h"
+
 typedef struct {
     float x, y;
     float vx, vy;
@@ -8,7 +10,7 @@ typedef struct {
 } Player;
 
 Player player_create(float x, float y);
-void player_update(Player *p);
+void player_update(Player *p, Platform *platforms, int platformCount, float dt);
 void player_jump(Player *p);
 void player_move(Player *p, float dir);
 

@@ -4,7 +4,7 @@
 // ---------- Окно ----------
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
-#define FULLSCREEN    1   // 1 = полный экран, 0 = окно
+#define FULLSCREEN    0   // 1 = полный экран, 0 = окно
 
 // ---------- Игрок ----------
 #define GRAVITY      0.5f

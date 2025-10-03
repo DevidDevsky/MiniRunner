@@ -4,6 +4,7 @@
 #include "level.h"
 #include "config.h"
 #include "difficulty.h"
+#include "enemy.h"
 
 #define MAX_PLATFORMS_COUNT 256
 
@@ -208,6 +209,39 @@ Level level_create(int difficulty) {
         lvl.platformCount++;
     }
 
+    // --- Спавн врагов ---
+    int maxEnemies = (difficulty <= 2) ? 1 : (2 + difficulty / 3);
+    if (maxEnemies > 8) maxEnemies = 8;
+    lvl.enemyCount = 0;
+    lvl.enemies = NULL;
+    if (maxEnemies > 0) {
+        lvl.enemies = (Enemy*)malloc(sizeof(Enemy) * maxEnemies);
+        // размещаем врагов на широких неподвижных платформах (земля/плавающие)
+        for (int i = 0; i < lvl.platformCount && lvl.enemyCount < maxEnemies; i++) {
+            Platform *p = &lvl.platforms[i];
+            if (p->type == PLATFORM_MOVING) continue;
+            if (p->w < 120) continue;
+            // пропустим стартовую платформу и ближайшие к ней сегменты
+            if (i == lvl.startPlatform || p->x < lvl.platforms[lvl.startPlatform].x + 300) continue;
+            // не на каждую подходящую — разрежаем
+            if (rand() % 3 != 0) continue;
+            float ex = p->x + p->w * 0.5f - 20.0f; // центр платформы
+            float ey = p->y - 40.0f;               // на поверхности
+            lvl.enemies[lvl.enemyCount++] = enemy_create(ex, ey);
+        }
+        // если врагов меньше чем хотели — добьём с земли старт/финиш
+        for (int i = 0; i < lvl.platformCount && lvl.enemyCount < maxEnemies; i++) {
+            Platform *p = &lvl.platforms[i];
+            if (p->y == GROUND_Y) {
+                if (p->x < lvl.platforms[lvl.startPlatform].x + 400) continue;
+                if (rand() % 3 != 0) continue;
+                float ex = p->x + p->w * 0.3f - 20.0f;
+                float ey = p->y - 40.0f;
+                lvl.enemies[lvl.enemyCount++] = enemy_create(ex, ey);
+            }
+        }
+    }
+
     return lvl;
 }
 
@@ -215,4 +249,9 @@ void level_destroy(Level *lvl) {
     free(lvl->platforms);
     lvl->platforms = NULL;
     lvl->platformCount = 0;
+    if (lvl->enemies) {
+        free(lvl->enemies);
+        lvl->enemies = NULL;
+        lvl->enemyCount = 0;
+    }
 }

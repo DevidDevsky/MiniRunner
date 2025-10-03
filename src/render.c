@@ -21,6 +21,17 @@ void render(SDL_Renderer *renderer, Player *p, Level *lvl, Camera *cam) {
         SDL_RenderFillRect(renderer, &plat_rect);
     }
 
+    // враги
+    if (lvl->enemies && lvl->enemyCount > 0) {
+        SDL_SetRenderDrawColor(renderer, 160, 32, 240, 255); // purple
+        for (int i = 0; i < lvl->enemyCount; i++) {
+            Enemy *e = &lvl->enemies[i];
+            if (!e->alive) continue;
+            SDL_Rect er = {(int)(e->x - cam->x), (int)(e->y - cam->y), e->w, e->h};
+            SDL_RenderFillRect(renderer, &er);
+        }
+    }
+
     // игрок
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_Rect rect = {(int)(p->x - cam->x), (int)(p->y - cam->y), PLAYER_SIZE, PLAYER_SIZE};

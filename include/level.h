@@ -2,12 +2,16 @@
 #define LEVEL_H
 
 #include "platform.h"
+#include "enemy.h"
 
 typedef struct {
     Platform *platforms;
     int platformCount;
     int startPlatform;
     int finishPlatform;
+    // Enemies
+    Enemy *enemies;
+    int enemyCount;
 } Level;
 
 Level level_create(int difficulty);

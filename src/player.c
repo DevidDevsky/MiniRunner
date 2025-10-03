@@ -67,12 +67,7 @@ void player_update(Player *p, Platform *platforms, int platformCount, float dt) 
         }
     }
 
-    // Коллизия с "землей"
-    if (p->y >= GROUND_Y - PLAYER_SIZE) {
-        p->y = GROUND_Y - PLAYER_SIZE;
-        p->vy = 0;
-        p->onGround = 1;
-    }
+    // Убрали бесконечную землю: падение обрабатывается в игровом цикле (респаун)
 }
 
 void player_jump(Player *p) {

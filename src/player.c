@@ -1,5 +1,6 @@
 #include "player.h"
 #include "config.h"
+#include <math.h>
 
 Player player_create(float x, float y) {
     Player p = {x, y, 0, 0, 0};
@@ -7,32 +8,66 @@ Player player_create(float x, float y) {
 }
 
 void player_update(Player *p, Platform *platforms, int platformCount, float dt) {
-    // движение
+    // Горизонтальное движение и коллизии
     p->x += p->vx * dt;
-    p->y += p->vy * dt;
-    p->vy += GRAVITY * dt;
-
-    p->onGround = 0;
-
-    // проверка коллизий со всеми платформами
     for (int i = 0; i < platformCount; i++) {
         Platform* plat = &platforms[i];
-
-        float player_bottom = p->y + PLAYER_SIZE;
-        float platform_top = plat->y;
-
-        // Проверяем, что игрок пересекается с платформой по X
-        if (p->x + PLAYER_SIZE > plat->x && p->x < plat->x + plat->w) {
-            // Проверяем, что игрок приземляется на платформу сверху
-            if (player_bottom >= platform_top && (player_bottom - p->vy * dt) <= platform_top) {
-                p->y = platform_top - PLAYER_SIZE;
-                p->vy = 0;
-                p->onGround = 1;
+        if (p->x + PLAYER_SIZE > plat->x && p->x < plat->x + plat->w &&
+            p->y + PLAYER_SIZE > plat->y && p->y < plat->y + plat->h) {
+            if (p->vx > 0) { // Движение вправо
+                p->x = plat->x - PLAYER_SIZE;
+            } else if (p->vx < 0) { // Движение влево
+                p->x = plat->x + plat->w;
             }
         }
     }
 
-    // ограничение снизу (земля)
+    // Вертикальное движение и коллизии
+    p->y += p->vy * dt;
+    p->vy += GRAVITY * dt;
+    p->onGround = 0;
+
+    for (int i = 0; i < platformCount; i++) {
+        Platform* plat = &platforms[i];
+        if (p->x + PLAYER_SIZE > plat->x && p->x < plat->x + plat->w) {
+            // Коллизия сверху платформы (приземление)
+            if (p->vy > 0 && p->y + PLAYER_SIZE > plat->y && (p->y + PLAYER_SIZE - p->vy * dt) <= plat->y) {
+                p->y = plat->y - PLAYER_SIZE;
+                p->vy = 0;
+                p->onGround = 1;
+                // Если платформа движется, «везём» игрока
+                if (plat->type == PLATFORM_MOVING) {
+                    p->x += plat->vx * dt;
+                }
+            }
+            // Коллизия снизу платформы (удар головой)
+            if (p->vy < 0 && p->y < plat->y + plat->h && (p->y - p->vy * dt) >= (plat->y + plat->h)) {
+                p->y = plat->y + plat->h;
+                p->vy = 0;
+            }
+        }
+    }
+
+    // Подстраховка: если стоим на платформе почти точно (погрешность по float), считаем что на земле
+    if (!p->onGround && p->vy >= 0) {
+        for (int i = 0; i < platformCount; i++) {
+            Platform* plat = &platforms[i];
+            if (p->x + PLAYER_SIZE > plat->x && p->x < plat->x + plat->w) {
+                float dy = plat->y - (p->y + PLAYER_SIZE);
+                if (fabsf(dy) <= 1.0f) {
+                    p->y = plat->y - PLAYER_SIZE;
+                    p->vy = 0;
+                    p->onGround = 1;
+                    if (plat->type == PLATFORM_MOVING) {
+                        p->x += plat->vx * dt;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Коллизия с "землей"
     if (p->y >= GROUND_Y - PLAYER_SIZE) {
         p->y = GROUND_Y - PLAYER_SIZE;
         p->vy = 0;

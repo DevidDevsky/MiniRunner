@@ -6,6 +6,7 @@
 #include "config.h"
 #include "level.h"
 #include "camera.h"
+#include "physics.h"
 
 void game_loop() {
     Uint32 window_flags = FULLSCREEN ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
@@ -37,6 +38,7 @@ void game_loop() {
         lastTick = currentTick;
 
         running = handle_input(&player, window);
+        platforms_update_all(level.platforms, level.platformCount, dt);
         player_update(&player, level.platforms, level.platformCount, dt);
         camera_update(&camera, player.x, player.y);
         render(renderer, &player, &level, &camera);

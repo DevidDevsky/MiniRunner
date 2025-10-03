@@ -6,7 +6,7 @@ int handle_input(Player *p, SDL_Window *window) {
         if (event.type == SDL_QUIT) return 0;
         if (event.type == SDL_KEYDOWN) {
             if (event.key.keysym.sym == SDLK_ESCAPE) return 0;
-            if (event.key.keysym.sym == SDLK_SPACE) player_jump(p);
+            if (event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_w) player_jump(p);
 
             // переключение fullscreen (F11)
             if (event.key.keysym.sym == SDLK_F11) {
@@ -22,8 +22,8 @@ int handle_input(Player *p, SDL_Window *window) {
 
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     float dir = 0;
-    if (state[SDL_SCANCODE_LEFT])  dir = -1;
-    if (state[SDL_SCANCODE_RIGHT]) dir = 1;
+    if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A])  dir = -1;
+    if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D]) dir = 1;
     player_move(p, dir);
 
     return 1;

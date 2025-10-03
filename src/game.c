@@ -5,6 +5,7 @@
 #include "render.h"
 #include "config.h"
 #include "level.h"
+#include "camera.h"
 
 void game_loop() {
     Uint32 window_flags = FULLSCREEN ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
@@ -16,8 +17,15 @@ void game_loop() {
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    Player player = player_create(100, GROUND_Y - PLAYER_SIZE);
-    Level level = level_create();
+    int difficulty = 1;
+    Level level = level_create(difficulty);
+
+    Platform start_platform = level.platforms[level.startPlatform];
+    float player_start_x = start_platform.x + (start_platform.w / 2) - (PLAYER_SIZE / 2);
+    float player_start_y = start_platform.y - PLAYER_SIZE;
+    Player player = player_create(player_start_x, player_start_y);
+
+    Camera camera = {0, 0};
 
     int running = 1;
     Uint32 lastTick = SDL_GetTicks();
@@ -30,7 +38,22 @@ void game_loop() {
 
         running = handle_input(&player, window);
         player_update(&player, level.platforms, level.platformCount, dt);
-        render(renderer, &player, &level);
+        camera_update(&camera, player.x, player.y);
+        render(renderer, &player, &level, &camera);
+
+        // Проверка достижения финиша
+        Platform finish_platform = level.platforms[level.finishPlatform];
+        if (player.x > finish_platform.x && player.x < finish_platform.x + finish_platform.w) {
+            difficulty++;
+            level_destroy(&level);
+            level = level_create(difficulty);
+
+            Platform start_platform = level.platforms[level.startPlatform];
+            player.x = start_platform.x + (start_platform.w / 2) - (PLAYER_SIZE / 2);
+            player.y = start_platform.y - PLAYER_SIZE;
+            player.vx = 0;
+            player.vy = 0;
+        }
     }
 
     level_destroy(&level);

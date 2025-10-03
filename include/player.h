@@ -5,8 +5,12 @@
 
 typedef struct {
     float x, y;
+    float lastY; // previous Y for stomp detection
     float vx, vy;
     int onGround;
+    int lives; // player lives
+    int invFrames; // frames of post-damage invulnerability
+    int respawnLockFrames; // frames to lock horizontal movement after respawn
 } Player;
 
 Player player_create(float x, float y);

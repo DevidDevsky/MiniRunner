@@ -49,6 +49,7 @@ Level level_create(int difficulty) {
     Level lvl;
     lvl.platforms = malloc(sizeof(Platform) * MAX_PLATFORMS_COUNT);
     lvl.platformCount = 0;
+    lvl.difficulty = difficulty;
 
     float max_jump_up, max_jump_dx, air_time;
     calculate_jump_params(&max_jump_up, &max_jump_dx, &air_time);

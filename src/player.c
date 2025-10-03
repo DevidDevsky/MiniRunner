@@ -3,11 +3,13 @@
 #include <math.h>
 
 Player player_create(float x, float y) {
-    Player p = {x, y, 0, 0, 0};
+    Player p = {x, y, y, 0, 0, 0, 3, 0, 0};
     return p;
 }
 
 void player_update(Player *p, Platform *platforms, int platformCount, float dt) {
+    // Запомним предыдущую позицию по Y для детекции "стомпа" по врагам
+    p->lastY = p->y;
     // Горизонтальное движение и коллизии
     p->x += p->vx * dt;
     for (int i = 0; i < platformCount; i++) {

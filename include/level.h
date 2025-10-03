@@ -9,6 +9,7 @@ typedef struct {
     int platformCount;
     int startPlatform;
     int finishPlatform;
+    int difficulty; // current difficulty/level index
     // Enemies
     Enemy *enemies;
     int enemyCount;

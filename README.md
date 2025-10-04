@@ -4,7 +4,7 @@ Fast 2D runner built in C + SDL2 with procedural levels and a compact game loop.
 
 ![Language](https://img.shields.io/badge/lang-C-blue)
 ![SDL2](https://img.shields.io/badge/SDL2-2.x-orange)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-green)
 
 — Russian README: see [`README.ru.md`](README.ru.md)
 
@@ -130,4 +130,5 @@ Makefile        # runner / runner_demo
 - Please run `make` and test both `runner` and `runner_demo` before submitting.
 
 ## License
-MIT — see [LICENSE](LICENSE).
+PolyForm Strict 1.0.0 — see [LICENSE](LICENSE) or the official text at
+https://polyformproject.org/licenses/strict/1.0.0/

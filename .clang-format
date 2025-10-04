@@ -1,0 +1,21 @@
+BasedOnStyle: LLVM
+Language: Cpp
+# Apply to C as well
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+ContinuationIndentWidth: 8
+BreakBeforeBraces: Allman
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AlignAfterOpenBracket: Align
+AlignOperands: true
+PointerAlignment: Left
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAroundPointerQualifiers: Default
+ReflowComments: true
+SortIncludes: false

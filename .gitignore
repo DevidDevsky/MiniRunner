@@ -1,0 +1,43 @@
+# Build artifacts
+*.o
+*.obj
+*.lo
+*.la
+*.lai
+*.gch
+*.pch
+
+# Static/Shared libs
+*.a
+*.so
+*.dylib
+*.dll
+
+# Executables / binaries
+*.exe
+*.out
+runner
+runner_demo
+
+# Build directories
+/build/
+/bin/
+/obj/
+/dist/
+/.cache/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Editor/IDE (customize as needed)
+.vscode/
+.idea/

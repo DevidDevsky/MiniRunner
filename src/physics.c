@@ -14,5 +14,13 @@ void platforms_update_all(Platform *platforms, int count, float dt) {
                 p->vx = -p->vx;
             }
         }
+        // crumble timers
+        if (p->type == PLATFORM_CRUMBLE && p->crumbles && p->crumbleTimer > 0.0f) {
+            p->crumbleTimer -= dt / 60.0f; // dt ~ frames, convert to seconds
+            if (p->crumbleTimer <= 0.0f) {
+                // collapse: hide by setting height to 0
+                p->h = 0;
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ void player_update(Player *p, Platform *platforms, int platformCount, float dt) 
     p->x += p->vx * dt;
     for (int i = 0; i < platformCount; i++) {
         Platform* plat = &platforms[i];
+        if (plat->h <= 0) continue;
         if (p->x + PLAYER_SIZE > plat->x && p->x < plat->x + plat->w &&
             p->y + PLAYER_SIZE > plat->y && p->y < plat->y + plat->h) {
             if (p->vx > 0) { // Движение вправо
@@ -28,19 +29,24 @@ void player_update(Player *p, Platform *platforms, int platformCount, float dt) 
     p->y += p->vy * dt;
     p->vy += GRAVITY * dt;
     p->onGround = 0;
-
     for (int i = 0; i < platformCount; i++) {
         Platform* plat = &platforms[i];
+        if (plat->h <= 0) continue;
         if (p->x + PLAYER_SIZE > plat->x && p->x < plat->x + plat->w) {
             // Коллизия сверху платформы (приземление)
             if (p->vy > 0 && p->y + PLAYER_SIZE > plat->y && (p->y + PLAYER_SIZE - p->vy * dt) <= plat->y) {
                 p->y = plat->y - PLAYER_SIZE;
                 p->vy = 0;
                 p->onGround = 1;
-                // Если платформа движется, «везём» игрока
+                // Триггерим крушение платформы
+                if (plat->type == PLATFORM_CRUMBLE && !plat->crumbles) {
+                    plat->crumbles = 1;
+                    plat->crumbleTimer = plat->crumbleDelay;
+                }
                 if (plat->type == PLATFORM_MOVING) {
                     p->x += plat->vx * dt;
                 }
+                break;
             }
             // Коллизия снизу платформы (удар головой)
             if (p->vy < 0 && p->y < plat->y + plat->h && (p->y - p->vy * dt) >= (plat->y + plat->h)) {
@@ -54,12 +60,18 @@ void player_update(Player *p, Platform *platforms, int platformCount, float dt) 
     if (!p->onGround && p->vy >= 0) {
         for (int i = 0; i < platformCount; i++) {
             Platform* plat = &platforms[i];
+            if (plat->h <= 0) continue;
             if (p->x + PLAYER_SIZE > plat->x && p->x < plat->x + plat->w) {
                 float dy = plat->y - (p->y + PLAYER_SIZE);
                 if (fabsf(dy) <= 1.0f) {
                     p->y = plat->y - PLAYER_SIZE;
                     p->vy = 0;
                     p->onGround = 1;
+                    // Триггерим крушение платформы и в safety-блоке
+                    if (plat->type == PLATFORM_CRUMBLE && !plat->crumbles) {
+                        plat->crumbles = 1;
+                        plat->crumbleTimer = plat->crumbleDelay;
+                    }
                     if (plat->type == PLATFORM_MOVING) {
                         p->x += plat->vx * dt;
                     }

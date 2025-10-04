@@ -213,6 +213,12 @@ Level level_create(int difficulty) {
     // --- Спавн врагов ---
     int maxEnemies = (difficulty <= 2) ? 1 : (2 + difficulty / 3);
     if (maxEnemies > 8) maxEnemies = 8;
+    const char* demo_env = getenv("DEMO_MODE");
+    int demo_mode = (demo_env && demo_env[0] == '1');
+    if (demo_mode) {
+        if (maxEnemies < 10) maxEnemies += 4; // больше врагов в демо
+        if (maxEnemies > 12) maxEnemies = 12;
+    }
     lvl.enemyCount = 0;
     lvl.enemies = NULL;
     if (maxEnemies > 0) {
@@ -228,7 +234,29 @@ Level level_create(int difficulty) {
             if (rand() % 3 != 0) continue;
             float ex = p->x + p->w * 0.5f - 20.0f; // центр платформы
             float ey = p->y - 40.0f;               // на поверхности
-            lvl.enemies[lvl.enemyCount++] = enemy_create(ex, ey);
+            // тип врага по сложности (усилено в демо)
+            int r = rand() % 100;
+            EnemyType et = ENEMY_PATROL;
+            if (difficulty >= 3 && r < (demo_mode ? 30 : 20)) et = ENEMY_SHOOTER; else
+            if (difficulty >= 2 && r < (demo_mode ? 55 : 35)) et = ENEMY_JUMPER; else
+            if (difficulty >= 3 && r < (demo_mode ? 80 : 65)) et = ENEMY_FLYING; else
+            if (difficulty >= 2 && r < (demo_mode ? 92 : 85)) et = ENEMY_SPIKE; else
+                et = ENEMY_PATROL;
+            lvl.enemies[lvl.enemyCount++] = enemy_create_type(ex, ey, et);
+            // для летающего зададим высоту и диапазон
+            if (lvl.enemies[lvl.enemyCount-1].type == ENEMY_FLYING) {
+                lvl.enemies[lvl.enemyCount-1].baseY = p->y - 100.0f - (rand()%40);
+                lvl.enemies[lvl.enemyCount-1].rangeL = p->x - 60.0f;
+                lvl.enemies[lvl.enemyCount-1].rangeR = p->x + p->w + 60.0f;
+                lvl.enemies[lvl.enemyCount-1].vx = (rand()%2?1:-1) * 2.0f;
+                if (demo_mode) lvl.enemies[lvl.enemyCount-1].amplitude *= 1.3f; // повыше синус
+            }
+            // если выбрали Shooter, а платформа движущаяся или узкая — откат к PATROL
+            if (lvl.enemies[lvl.enemyCount-1].type == ENEMY_SHOOTER) {
+                if (p->type == PLATFORM_MOVING || p->w < 140) {
+                    lvl.enemies[lvl.enemyCount-1].type = ENEMY_PATROL;
+                }
+            }
         }
         // если врагов меньше чем хотели — добьём с земли старт/финиш
         for (int i = 0; i < lvl.platformCount && lvl.enemyCount < maxEnemies; i++) {
@@ -238,8 +266,85 @@ Level level_create(int difficulty) {
                 if (rand() % 3 != 0) continue;
                 float ex = p->x + p->w * 0.3f - 20.0f;
                 float ey = p->y - 40.0f;
-                lvl.enemies[lvl.enemyCount++] = enemy_create(ex, ey);
+                EnemyType et = (difficulty >= 3 && rand()%2==0) ? ENEMY_JUMPER : ENEMY_PATROL;
+                lvl.enemies[lvl.enemyCount++] = enemy_create_type(ex, ey, et);
             }
+        }
+
+        // DEMO: гарантировать наличие Flying, Jumper, Shooter, Spike, если есть место
+        if (demo_mode) {
+            int need_fly = 1, need_jump = 1, need_shoot = 1, need_spike = 1;
+            for (int i = 0; i < lvl.enemyCount; i++) {
+                if (lvl.enemies[i].type == ENEMY_FLYING) need_fly = 0;
+                if (lvl.enemies[i].type == ENEMY_JUMPER) need_jump = 0;
+                if (lvl.enemies[i].type == ENEMY_SHOOTER) need_shoot = 0;
+                if (lvl.enemies[i].type == ENEMY_SPIKE) need_spike = 0;
+            }
+            // Найти платформу для размещения
+            if (need_fly && lvl.enemyCount < maxEnemies) {
+                for (int i = 0; i < lvl.platformCount; i++) {
+                    Platform *p = &lvl.platforms[i];
+                    if (p->w >= 120 && p->x > lvl.platforms[lvl.startPlatform].x + 200) {
+                        float ex = p->x + p->w * 0.5f - 20.0f;
+                        float ey = p->y - 120.0f;
+                        lvl.enemies[lvl.enemyCount++] = enemy_create_type(ex, ey, ENEMY_FLYING);
+                        lvl.enemies[lvl.enemyCount-1].rangeL = p->x - 60.0f;
+                        lvl.enemies[lvl.enemyCount-1].rangeR = p->x + p->w + 60.0f;
+                        lvl.enemies[lvl.enemyCount-1].amplitude *= 1.3f;
+                        break;
+                    }
+                }
+            }
+            if (need_jump && lvl.enemyCount < maxEnemies) {
+                for (int i = 0; i < lvl.platformCount; i++) {
+                    Platform *p = &lvl.platforms[i];
+                    if (p->type != PLATFORM_MOVING && p->w >= 120 && p->x > lvl.platforms[lvl.startPlatform].x + 200) {
+                        float ex = p->x + p->w * 0.6f - 20.0f;
+                        float ey = p->y - 40.0f;
+                        lvl.enemies[lvl.enemyCount++] = enemy_create_type(ex, ey, ENEMY_JUMPER);
+                        break;
+                    }
+                }
+            }
+            if (need_shoot && lvl.enemyCount < maxEnemies) {
+                for (int i = 0; i < lvl.platformCount; i++) {
+                    Platform *p = &lvl.platforms[i];
+                    if (p->type != PLATFORM_MOVING && p->w >= 140 && p->x > lvl.platforms[lvl.startPlatform].x + 220) {
+                        float ex = p->x + p->w * 0.5f - 18.0f;
+                        float ey = p->y - 36.0f;
+                        lvl.enemies[lvl.enemyCount++] = enemy_create_type(ex, ey, ENEMY_SHOOTER);
+                        break;
+                    }
+                }
+            }
+            if (need_spike && lvl.enemyCount < maxEnemies) {
+                for (int i = 0; i < lvl.platformCount; i++) {
+                    Platform *p = &lvl.platforms[i];
+                    if (p->w >= 100 && p->x > lvl.platforms[lvl.startPlatform].x + 220) {
+                        float ex = p->x + p->w * 0.2f - 18.0f;
+                        float ey = p->y - 24.0f;
+                        lvl.enemies[lvl.enemyCount++] = enemy_create_type(ex, ey, ENEMY_SPIKE);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Пометить часть платформ как разрушаемые ---
+    // Только для плавающих, не старт/финиш, и разреженно. Чем выше сложность — чуть больше.
+    for (int i = 0; i < lvl.platformCount; i++) {
+        Platform *p = &lvl.platforms[i];
+        if (p->type != PLATFORM_FLOATING) continue;
+        if (i == lvl.startPlatform || i == lvl.finishPlatform) continue;
+        // вероятность по сложности
+        int chance = (difficulty <= 2) ? 8 : (difficulty == 3 ? 12 : 16); // проценты
+        if (demo_mode) chance = 30;
+        if ((rand() % 100) < chance) {
+            p->type = PLATFORM_CRUMBLE;
+            p->crumbles = 0;
+            p->crumbleDelay = (rand()%2==0) ? 1.5f : 2.5f;
+            p->crumbleTimer = 0.0f;
         }
     }
 

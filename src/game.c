@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "game.h"
 #include "player.h"
 #include "input.h"
@@ -33,6 +34,35 @@ void game_loop() {
         SCREEN_WIDTH, SCREEN_HEIGHT, window_flags);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    // Инициализация SDL_image для PNG
+    if ((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) == 0) {
+        SDL_Log("IMG_Init failed: %s", IMG_GetError());
+    }
+
+    // Загрузка кадров игрока Player1.png..Player8.png
+    const char *playerPaths[8] = {
+        "assets/tilesets/PLayer/Player1.png",
+        "assets/tilesets/PLayer/Player2.png",
+        "assets/tilesets/PLayer/Player3.png",
+        "assets/tilesets/PLayer/Player4.png",
+        "assets/tilesets/PLayer/Player5.png",
+        "assets/tilesets/PLayer/Player6.png",
+        "assets/tilesets/PLayer/Player7.png",
+        "assets/tilesets/PLayer/Player8.png"
+    };
+    SDL_Texture *playerTex[8] = {0};
+    for (int i = 0; i < 8; i++) {
+        SDL_Surface *surf = IMG_Load(playerPaths[i]);
+        if (!surf) {
+            SDL_Log("Failed to load %s: %s", playerPaths[i], IMG_GetError());
+            continue;
+        }
+        // Включим прозрачность по цвету (если нужно). Если PNG уже с альфой, можно пропустить.
+        // SDL_SetColorKey(surf, SDL_TRUE, SDL_MapRGB(surf->format, 255, 0, 255));
+        playerTex[i] = SDL_CreateTextureFromSurface(renderer, surf);
+        SDL_FreeSurface(surf);
+    }
 
     int difficulty = 1;
     Level level = level_create(difficulty);
@@ -94,9 +124,18 @@ void game_loop() {
                 if (((player.invFrames / 4) % 2) == 0) drawPlayer = 0; // пропуск кадра
             }
             if (drawPlayer) {
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                SDL_Rect pr = {(int)(player.x - camera.x), (int)(player.y - camera.y), PLAYER_SIZE, PLAYER_SIZE};
-                SDL_RenderFillRect(renderer, &pr);
+                int idx = player.frameIdx - 1;
+                if (idx < 0) idx = 0; if (idx > 7) idx = 7;
+                SDL_Texture *tex = playerTex[idx];
+                SDL_Rect dst = {(int)(player.x - camera.x), (int)(player.y - camera.y), PLAYER_SIZE, PLAYER_SIZE};
+                if (tex) {
+                    SDL_RendererFlip flip = (player.facing < 0) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+                    SDL_RenderCopyEx(renderer, tex, NULL, &dst, 0.0, NULL, flip);
+                } else {
+                    // Фоллбек если текстуры нет
+                    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                    SDL_RenderFillRect(renderer, &dst);
+                }
             }
 
             // HUD: жизни (сердечки) и уровень
@@ -200,6 +239,9 @@ void game_loop() {
     }
 
     level_destroy(&level);
+    // Очистка текстур и SDL_image
+    for (int i = 0; i < 8; i++) if (playerTex[i]) SDL_DestroyTexture(playerTex[i]);
+    IMG_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

@@ -3,7 +3,10 @@
 #include <math.h>
 
 Player player_create(float x, float y) {
-    Player p = {x, y, y, 0, 0, 0, 3, 0, 0};
+    Player p = {x, y, y, 0, 0, 0, 3, 0, 0,
+                1, /* facing */
+                1, /* frameIdx 1..8 */
+                0.0f /* animTimer */};
     return p;
 }
 
@@ -70,6 +73,22 @@ void player_update(Player *p, Platform *platforms, int platformCount, float dt) 
     }
 
     // Убрали бесконечную землю: падение обрабатывается в игровом цикле (респаун)
+
+    // Анимация: 12 FPS для бега, кадры 1..8. В простое держим 1-й кадр
+    // dt здесь нормализован ~1.0 при 60 FPS, значит шаг кадра ~5.0
+    const float RUN_FRAME_STEP = 3.0f; // 60/12
+    if (fabsf(p->vx) > 0.01f && p->onGround) {
+        p->animTimer += dt;
+        while (p->animTimer >= RUN_FRAME_STEP) {
+            p->animTimer -= RUN_FRAME_STEP;
+            p->frameIdx += 1;
+            if (p->frameIdx > 8) p->frameIdx = 1;
+        }
+    } else {
+        p->frameIdx = 1;
+        // не сбрасываем animTimer полностью, чтобы переход выглядел плавнее
+        if (p->animTimer > RUN_FRAME_STEP) p->animTimer = fmodf(p->animTimer, RUN_FRAME_STEP);
+    }
 }
 
 void player_jump(Player *p) {
@@ -81,4 +100,6 @@ void player_jump(Player *p) {
 
 void player_move(Player *p, float dir) {
     p->vx = dir * PLAYER_SPEED;
+    if (dir > 0.01f) p->facing = 1;
+    else if (dir < -0.01f) p->facing = -1;
 }

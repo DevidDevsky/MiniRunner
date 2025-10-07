@@ -10,7 +10,7 @@
 #define GRAVITY      0.5f
 #define JUMP_FORCE  -12.0f
 #define PLAYER_SPEED 5.0f
-#define PLAYER_SIZE  50
+#define PLAYER_SIZE  72
 
 // ---------- Земля ----------
 #define GROUND_HEIGHT 50

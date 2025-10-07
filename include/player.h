@@ -11,6 +11,9 @@ typedef struct {
     int lives; // player lives
     int invFrames; // frames of post-damage invulnerability
     int respawnLockFrames; // frames to lock horizontal movement after respawn
+    int facing; // 1 = right, -1 = left
+    int frameIdx; // current animation frame (1..8)
+    float animTimer; // accumulates dt for frame stepping
 } Player;
 
 Player player_create(float x, float y);
